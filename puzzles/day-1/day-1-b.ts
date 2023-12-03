@@ -29,7 +29,7 @@ function toNumber(s: string): number {
   }
 }
 
-export async function day1a(dataPath?: string) {
+export async function day1b(dataPath?: string) {
   const data = await readData(dataPath);
 
   return data.reduce((total: number, line: string) => {
@@ -43,5 +43,5 @@ export async function day1a(dataPath?: string) {
   }, 0);
 }
 
-const answer = await day1a();
+const answer = await day1b();
 console.log(chalk.bgGreen('Your Answer:'), chalk.green(answer));
