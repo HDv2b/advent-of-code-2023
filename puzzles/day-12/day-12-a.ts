@@ -88,7 +88,10 @@ function splitLastGap(gapsSoFar: number[], gapsRemaining: number): number[][] {
     [ 5, 1, 3, 0 ] would allow eg: .....#.#...###
 
  */
-function generateGapChains(groupLength: number, constraint: number[]): number[][] {
+function generateGapChains(
+  groupLength: number,
+  constraint: number[]
+): number[][] {
   let remainingGapGroups: number = constraint.length + 1;
   const gapCharCount = groupLength - constraint.reduce((sum, n) => sum + n, 0);
 
@@ -142,20 +145,19 @@ function getPossibleArrangements(line: string): number {
   const mustBesBin = parseInt(mustBes, 2);
   const canBesBin = parseInt(canBes, 2);
 
-  let possibles = [];
+  let possibles = 0;
   // valid numbers can only be in range of mustBes - canBes, eg 0000111 to 1110111
-  for (let c = mustBesBin; c <= canBesBin; c++) {
+  for (let c of possibleCombinations) {
     // eg Candidate = 1010111:
     if (
       (mustBesBin & c) === mustBesBin && // 0000111 & 1010111 === 0000111
-      (canBesBin & c) === c && // 1110111 & 1010111 === 1010111
-      possibleCombinations.includes(c) // filter in only those which match gap configurations
+      (canBesBin & c) === c // 1110111 & 1010111 === 1010111
     ) {
-      possibles.push(c);
+      possibles++;
     }
   }
 
-  return possibles.length;
+  return possibles;
 }
 
 /**
