@@ -29,8 +29,16 @@ function noHashRemains(lineSection: string[]) {
 function chain(
   remainingSprings: string[], // includes leading gap
   remainingNumbers: number[],
-  chainSoFar: number[]
+  chainSoFar: number[],
+  cache
 ): number {
+  const cacheKey = `${remainingSprings.join('s')}-${remainingNumbers.join(
+    'n'
+  )}`;
+  const cacheFetch = cache.get(cacheKey);
+  if (cacheFetch) {
+    return cacheFetch;
+  }
   // console.log(remainingSprings, remainingNumbers, chainSoFar);
 
   const sumOfRemainingBlocks = remainingNumbers.reduce((sum, n) => sum + n, 0);
@@ -72,7 +80,8 @@ function chain(
         possibilities += chain(
           remainingSprings.slice(maybeGapLength + thisBlock),
           remainingNumbers.slice(1),
-          updatedChain
+          updatedChain,
+          cache
         );
       } else if (
         noHashRemains(remainingSprings.slice(maybeGapLength + thisBlock))
@@ -83,6 +92,8 @@ function chain(
     }
   }
 
+  cache.set(cacheKey, possibilities);
+
   return possibilities;
 }
 
@@ -90,6 +101,8 @@ function getPossibleArrangements(line: string): number {
   const parts = line.split(' ');
   const springs: string[] = parts[0].split('');
   const numbers: number[] = parts[1].split(',').map((n) => parseInt(n, 10));
+
+  const cache = new Map();
 
   const moreSprings = [
     ...springs,
@@ -114,7 +127,7 @@ function getPossibleArrangements(line: string): number {
     [0]
   ); */
 
-  console.log(moreSprings);
+  //console.log(moreSprings);
 
   const moreNumbers = [
     ...numbers,
@@ -124,15 +137,13 @@ function getPossibleArrangements(line: string): number {
     ...numbers,
   ];
 
-  let possibilities = chain(moreSprings, moreNumbers, []);
+  let possibilities = chain(moreSprings, moreNumbers, [], cache);
 
   return possibilities;
 }
 
 export async function day12b(dataPath?: string) {
   const data = await readData(dataPath);
-
-  // console.log(getPossibleArrangements(data[5]));
 
   let progress = 1;
   return data.reduce((total: number, line: string) => {
