@@ -186,7 +186,8 @@ export async function day12a(dataPath?: string) {
   const data = await readData(dataPath);
 
   return data.reduce((total: number, line: string) => {
-    return total + getPossibleArrangements(line);
+    const possibilities = getPossibleArrangements(line);
+    return total + possibilities;
   }, 0);
 }
 
