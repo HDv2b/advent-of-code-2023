@@ -2,6 +2,7 @@ import { readData } from '../../shared.ts';
 import chalk from 'chalk';
 
 let W: number;
+const cache: bigint[][] = [];
 
 function moveNorth(balls: bigint[], blocks: bigint[]): bigint[] {
   const updatedBalls = [...balls];
@@ -10,27 +11,9 @@ function moveNorth(balls: bigint[], blocks: bigint[]): bigint[] {
       const lineMovingUp = updatedBalls[j + 1];
       const lineMovedInto = updatedBalls[j] | blocks[j];
 
-      /*       console.log({ i, j }, updatedBalls[j], blocks[j], {
-        lineMovedInto,
-        lineMovingUp,
-      });
-
-      console.log('------');
-      console.log(lineMovedInto.toString(2));
-      console.log(lineMovingUp.toString(2), '^');
-      console.log('------'); */
-
       const moved = lineMovingUp & ~lineMovedInto;
       const remaining = lineMovingUp & lineMovedInto;
       const updatedLineMovedInto = moved | updatedBalls[j];
-
-      /*       console.log({
-        moved: moved.toString(2).padStart(10, '0'),
-        remaining: remaining.toString(2).padStart(10, '0'),
-        updatedLineMovedInto: updatedLineMovedInto
-          .toString(2)
-          .padStart(10, '0'),
-      }); */
 
       updatedBalls[j] = updatedLineMovedInto;
       updatedBalls[j + 1] = remaining;
@@ -128,54 +111,63 @@ function moveEast(balls: bigint[], blocks: bigint[]): bigint[] {
   return updatedBalls;
 }
 
+function score(map: bigint[], d = false): number {
+  let scoreForRow = map.length;
+  let total = 0;
+  map.forEach((l) => {
+    if (d) {
+      console.log(l.toString(2));
+    }
+    const ballsInRow = (l.toString(2).match(/1/g) || []).length;
+    if (d) {
+      console.log(ballsInRow);
+    }
+    total += ballsInRow * scoreForRow;
+    scoreForRow--;
+  });
+  return total;
+}
+
 export async function day14b(dataPath?: string) {
   const data = await readData(dataPath);
   W = data[0].length;
 
-  let balls: bigint[] = data.map((row) =>
-    BigInt(parseInt(row.replace(/O/g, '1').replace(/[#\.]/g, '0'), 2))
+  let balls: bigint[] = data.map((row, i) =>
+    BigInt(`0b` + row.replace(/O/g, '1').replace(/[#\.]/g, '0'))
   );
   let blocks: bigint[] = data.map((row) =>
-    BigInt(parseInt(row.replace(/#/g, '1').replace(/[O\.]/g, '0'), 2))
+    BigInt(`0b` + row.replace(/#/g, '1').replace(/[O\.]/g, '0'))
   );
-
-  /*   console.log(
-    balls
-      .map((x) => x.toString(2).padStart(data[0].length, '0'))
-      .join('\n')
-  );
-  console.log('--------------------------------------------------');
-  console.log(
-    blocks
-      .map((x) => x.toString(2).padStart(data[0].length, '0'))
-      .join('\n')
-  ); */
 
   let updatedBalls = balls;
 
   for (let y = 0; y < 1000000000; y++) {
-    const cache = [...updatedBalls];
     updatedBalls = moveNorth(updatedBalls, blocks);
     updatedBalls = moveWest(updatedBalls, blocks);
     updatedBalls = moveSouth(updatedBalls, blocks);
     updatedBalls = moveEast(updatedBalls, blocks);
 
-    if (cache.every((x, i) => x === updatedBalls[i])) {
-      console.log('DONE');
-      console.log(updatedBalls);
-      process.exit(0);
+    const found = cache.findIndex((cacheItem) =>
+      cacheItem.every((i, j) => i === updatedBalls[j])
+    );
+
+    if (found > -1) {
+      const firstInRange = found;
+      const lastInRange = cache.length - 1;
+      const range = 1 + lastInRange - firstInRange;
+
+      const winnerIndex =
+        ((1_000_000_000 - 1 - firstInRange) % range) + firstInRange;
+      // think the -1 is needed to factor in the 0 - indexing
+      // should pick out 117 (91286)
+
+      return score(cache[winnerIndex]);
+    } else {
+      cache.push(updatedBalls);
     }
   }
 
-  console.log(
-    updatedBalls
-      .map((x) =>
-        x.toString(2).padStart(data[0].length, '0').replace(/0/g, '.')
-      )
-      .join('\n')
-  );
-
-  return 0;
+  return 'oops';
 }
 
 const answer = await day14b();
